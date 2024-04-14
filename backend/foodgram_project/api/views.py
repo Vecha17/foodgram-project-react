@@ -14,26 +14,20 @@ from serializers import UserSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    #permission_classes = (AdminOnly, )
-    http_method_names = ('get', 'post', 'patch', 'delete')
+    serializer_class = UserSerializer
+    permission_classes = (AllowAny, )
+    http_method_names = ('get', 'post')
     #filter_backends = (filters.SearchFilter,)
     #lookup_field = 'username'
     pagination_class = (PageNumberPagination)
 
     @action(
             detail=False,
-            methods=['get', 'patch'],
+            methods=['get',],
             url_path='me',
             permission_classes=(IsAuthenticated,)
     )
-    def me(self, request):
-        if request.method == 'GET':
-            user = get_object_or_404(User, username=self.request.user.username)
-            serializer = self.get_serializer(user, many=False)
-            return Response(serializer.data)
-        user = self.request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+    def me(self):
+        user = get_object_or_404(User, username=self.request.user.username)
+        serializer = self.get_serializer(user, many=False)
+        return Response(serializer.data)
