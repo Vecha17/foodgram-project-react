@@ -9,7 +9,7 @@ from rest_framework.permissions import (
 )
 
 from recipes.models import User
-from serializers import UserSerializer
+from .serializers import UserSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):

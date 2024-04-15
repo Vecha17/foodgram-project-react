@@ -1,9 +1,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-from consts import (
-    USERNAME_LENGTH, FIRST_NAME_LENGTH, LAST_NAME_LENGTH,
-    EMAIL_LENGTH
+from .consts import (
+    USERNAME_LENGTH, FIRST_NAME_LENGTH,
+    LAST_NAME_LENGTH, EMAIL_LENGTH
 )
 
 
@@ -28,13 +28,30 @@ class User(AbstractUser):
     )
     is_subscribed = models.BooleanField(default=False)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'email']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     class Meta:
         verbose_name = 'Пользователи'
         verbose_name_plural = 'пользователи'
         default_related_name = 'users'
         ordering = ('username',)
+
+
+class Follow(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='user'
+    )
+    following = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='following'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'following'],
+                name='unique_user_following'
+            )
+        ]
 
 
 class Tag(models.Model):
@@ -66,7 +83,7 @@ class Recipe(models.Model):
     is_in_shopping_cart = models.BooleanField()
     name = models.CharField(max_length=200)
     image = models.ImageField()
-    text = models.CharField()
+    text = models.CharField(max_length=256)
     cooking_time = models.PositiveSmallIntegerField()
 
 
