@@ -37,19 +37,19 @@ class User(AbstractUser):
         ordering = ('username',)
 
 
-class Follow(models.Model):
+class Subscription(models.Model):
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='user'
     )
-    following = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='following'
+    subscriber = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscriber'
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'following'],
-                name='unique_user_following'
+                fields=['user', 'subscriber'],
+                name='unique_user_subscriber'
             )
         ]
 
@@ -67,7 +67,7 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(max_length=250)
-    unit_of_measurement = models.CharField(max_length=50)
+    measurement_unit = models.CharField(max_length=50)
 
 
 class Recipe(models.Model):
@@ -78,16 +78,16 @@ class Recipe(models.Model):
         related_name='recipes',
         verbose_name='Автор',
     )
-    ingredients = models.ManyToManyField(Ingredient, through='Value')
-    is_favorited = models.BooleanField()
-    is_in_shopping_cart = models.BooleanField()
+    ingredients = models.ManyToManyField(Ingredient, through='Amount')
+    is_favorited = models.BooleanField(default=False)
+    is_in_shopping_cart = models.BooleanField(default=False)
     name = models.CharField(max_length=200)
     image = models.ImageField()
     text = models.CharField(max_length=256)
     cooking_time = models.PositiveSmallIntegerField()
 
 
-class Value(models.Model):
+class Amount(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    value = models.CharField
+    amount = models.PositiveSmallIntegerField()

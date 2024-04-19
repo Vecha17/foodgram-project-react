@@ -2,14 +2,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.pagination import (PageNumberPagination)
+from rest_framework.pagination import (PageNumberPagination,)
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly, SAFE_METHODS,
     AllowAny, IsAuthenticated
 )
 
-from recipes.models import User
-from .serializers import UserSerializer
+from recipes.models import User, Recipe, Tag, Ingredient
+from .serializers import UserSerializer, RecipeSerializer, TagSerializer, IngredientSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -31,3 +31,21 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, username=self.request.user.username)
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data)
+
+
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = (AllowAny,)
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    #доделать
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ingredient.objects.all
+    serializer_class = IngredientSerializer
+    permission_classes = (AllowAny,)
