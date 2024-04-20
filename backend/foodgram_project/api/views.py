@@ -31,6 +31,16 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, username=self.request.user.username)
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data)
+    
+    @action(
+            detail=False,
+            methods=['post',],
+            url_path='set_password',
+            permission_classes=(IsAuthenticated,),
+            serializer_class = 
+    )
+    def set_password(self):
+        pass
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
