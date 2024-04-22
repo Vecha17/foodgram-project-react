@@ -86,6 +86,11 @@ class PasswordSerializer(serializers.Serializer):
     def validate(self, data):
         new_password = data['new_password']
         current_password = data['current_password']
+        user = self.context['request'].user
+        if user.password != current_password:
+            raise serializers.ValidationError(
+                'Неверный текущий пароль.'
+            )
         if new_password == current_password:
             raise serializers.ValidationError(
                 'Придумайте новый пароль, который отличается от старого.'

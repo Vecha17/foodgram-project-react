@@ -9,7 +9,7 @@ from rest_framework.permissions import (
 )
 
 from recipes.models import User, Recipe, Tag, Ingredient
-from .serializers import UserSerializer, RecipeSerializer, TagSerializer, IngredientSerializer
+from .serializers import UserSerializer, RecipeSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -31,16 +31,49 @@ class UserViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(User, username=self.request.user.username)
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data)
-    
+
     @action(
             detail=False,
             methods=['post',],
             url_path='set_password',
             permission_classes=(IsAuthenticated,),
-            serializer_class = 
     )
-    def set_password(self):
-        pass
+    def set_password(self, request):
+        serializer = PasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = self.get_object()
+        user.set_password(serializer.data.get('new_password'))
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+            detail=False,
+            methods=['get',],
+            url_path='subscribtions',
+            permission_classes=(IsAuthenticated,),
+    )
+    def subscribtions(self, request):
+        user = get_object_or_404(User, username=request.user.username)
+        sub = user.subscribers
+        serializer = SubscriptionSerializer(sub, many=True)
+        return Response(serializer.data)
+    #ДОДЕЛАТЬ
+
+    @action(
+            detail=True,
+            methods=['post', 'delete'],
+            url_path='subscribe',
+            permission_classes=(IsAuthenticated,),
+    )
+    def subscribe(self, request, pk=None):
+    #ДОДЕЛАТЬ
+
+    def get_serializer_class(self):
+        if self.action == 'set_password':
+            return PasswordSerializer
+        elif self.action == 'subscriptions':
+            return SubscriptionSerializer
+        return UserSerializer
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
