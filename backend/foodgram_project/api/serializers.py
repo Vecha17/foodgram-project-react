@@ -4,6 +4,7 @@ import webcolors
 
 from recipes.models import User, Recipe, Tag, Ingredient, Subscription
 from recipes import consts
+from .mixins import ValidateUsernameMixin
 
 
 class Hex2NameColor(serializers.Field):
@@ -19,7 +20,8 @@ class Hex2NameColor(serializers.Field):
         return data
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer, ValidateUsernameMixin):
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -27,6 +29,12 @@ class UserSerializer(serializers.ModelSerializer):
             'email', 'id', 'username',
             'first_name', 'last_name', 'is_subscribed'
         )
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if Subscription.objects.filter(user=user, author=obj):
+            return True
+        return False
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -61,17 +69,50 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
 
+class Recipe2SubSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
+    email = serializers.ReadOnlyField(source='author.email')
+    id = serializers.ReadOnlyField(source='author.id')
+    username = serializers.ReadOnlyField(source='author.username')
+    first_name = serializers.ReadOnlyField(source='author.first_name')
+    last_name = serializers.ReadOnlyField(source='author.last_name')
+    is_subscriber = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
-        fields = ('user', 'subscriber')
+        fields = (
+            'email', 'id', 'username', 'first_name', 'last_name',
+            'is_subscribed', 'recipes', 'resipes_count'
+        )
 
-    def validate_subscriber(self, value):
-        if self.context['request'].user == value:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя!')
-        return value
+    def get_is_subscribed(self, obj):
+        if Subscription.objects.filter(user=obj.user, author=obj.author):
+            return True
+        return False
+
+    def get_resipes(self, obj):
+        recipes = Recipe.objects.filter(author=obj.author)
+        return Recipe2SubSerializer(recipes, many=True)
+
+    def get_resipes_count(self, obj):
+        return Recipe.objects.filter(author=obj.author).count()
+
+    def validate(self, data):
+        author = self.context.get('author')
+        user = self.context['request'].user
+        if Subscription.objects.filter(user=user, author=author):
+            raise serializers.ValidationError('Вы уже подписаны на этого пользователя.')
+        if user == author:
+            raise serializers.ValidationError('Нельзя подписаться на себя.')
+        return data
 
 
 class PasswordSerializer(serializers.Serializer):

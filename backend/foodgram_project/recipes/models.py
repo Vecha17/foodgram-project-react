@@ -39,10 +39,10 @@ class User(AbstractUser):
 
 class Subscription(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='user'
+        User, on_delete=models.CASCADE, related_name='subscriber'
     )
-    subscriber = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='subscribers'
+    author = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscribed'
     )
 
     class Meta:
@@ -91,3 +91,5 @@ class Amount(models.Model):
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField()
+
+
