@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
 
-import consts
+from . import consts
 
 
 class User(AbstractUser):
@@ -24,7 +24,6 @@ class User(AbstractUser):
         max_length=consts.EMAIL_LENGTH,
         unique=True,
     )
-    is_subscribed = models.BooleanField(default=False)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
@@ -46,8 +45,8 @@ class Subscription(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'subscriber'],
-                name='unique_user_subscriber'
+                fields=['user', 'author'],
+                name='unique_user_author'
             )
         ]
 

@@ -79,7 +79,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 DJOSER = {
-    'LOGIN_FIELD': 'User.email'
+    'LOGIN_FIELD': 'email'
 }
 
 REST_FRAMEWORK = {

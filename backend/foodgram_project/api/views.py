@@ -2,14 +2,14 @@ from django.shortcuts import get_object_or_404
 from rest_framework import filters, generics, status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.pagination import (PageNumberPagination,)
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly, SAFE_METHODS,
     AllowAny, IsAuthenticated
 )
 
-from recipes.models import User, Recipe, Tag, Ingredient
-from .serializers import UserSerializer, RecipeSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer
+from recipes.models import User, Recipe, Tag, Ingredient, Subscription
+from .serializers import UserSerializer, RecipeReadSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer
+from .paginations import Pagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -17,9 +17,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (AllowAny, )
     http_method_names = ('get', 'post')
-    #filter_backends = (filters.SearchFilter,)
-    #lookup_field = 'username'
-    pagination_class = (PageNumberPagination)
+    pagination_class = Pagination
 
     @action(
             detail=False,
@@ -53,11 +51,9 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,),
     )
     def subscribtions(self, request):
-        user = get_object_or_404(User, username=request.user.username)
-        sub = user.subscribers
-        serializer = SubscriptionSerializer(sub, many=True)
+        subscribtions = Subscription.objects.filter(user=request.user)
+        serializer = SubscriptionSerializer(subscribtions, many=True)
         return Response(serializer.data)
-    #ДОДЕЛАТЬ
 
     @action(
             detail=True,
@@ -66,12 +62,23 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(IsAuthenticated,),
     )
     def subscribe(self, request, pk=None):
-    #ДОДЕЛАТЬ
+        user = request.user
+        author = get_object_or_404(User, id=pk)
+        if request.method == 'POST':
+            serializer = SubscriptionSerializer(
+                data=request.data,
+                context={'request': request, 'author': author}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        Subscription.objects.filter(author=author).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
         if self.action == 'set_password':
             return PasswordSerializer
-        elif self.action == 'subscriptions':
+        elif self.action == ('subscriptions' or 'subscribe'):
             return SubscriptionSerializer
         return UserSerializer
 
@@ -82,13 +89,25 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
 
 
-class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    #доделать
-
-
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeReadSerializer
+    pagination_class = Pagination
+    
+    #@action(
+    #    detail=True,
+    #    methods=['post', 'delete'],
+    #    url_path='favorite',
+    #    permission_classes=(IsAuthenticated,)
+    #)
+    #def favorite(self, request, pk=None):
+    #    recipe = get_object_or_404(Recipe, id=pk)
+    #    user = request.user
+    #    if request.method == 'POST':
+    #        serializer = pass
