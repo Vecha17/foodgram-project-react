@@ -93,7 +93,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     def get_recipes(self, obj):
         recipes = Recipe.objects.filter(author=obj.author)
-        return Recipe2SubSerializer(recipes, many=True)
+        return Recipe2SubSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
         return Recipe.objects.filter(author=obj.author).count()
@@ -102,9 +102,13 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         author = self.context.get('author')
         user = self.context['request'].user
         if Subscription.objects.filter(user=user, author=author).exists():
-            raise serializers.ValidationError('Вы уже подписаны на этого пользователя.')
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.'
+            )
         if user == author:
-            raise serializers.ValidationError('Нельзя подписаться на себя.')
+            raise serializers.ValidationError(
+                'Нельзя подписаться на себя.'
+            )
         return data
 
 
@@ -233,8 +237,16 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
 class RecipeWriteSerializer(serializers.ModelSerializer):
     ingredients = Ingredients2RecipeSerializer(many=True)
-    tags = TagSerializer(
+    tags = serializers.PrimaryKeyRelatedField(
+        queryset=Tag.objects.all(),
         many=True
     )
     image = Base64ImageField()
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'ingredients', 'tags', 'image',
+            'name', 'text', 'cooking_time', 'author'
+        )

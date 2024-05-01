@@ -49,17 +49,40 @@ class Subscription(models.Model):
                 name='unique_user_author'
             )
         ]
+        verbose_name = 'Подписки'
+        verbose_name_plural = 'подписки'
+        default_related_name = 'subscripions'
 
 
 class Tag(models.Model):
-    name = models.CharField(max_length=consts.TAGS_CONSTS_LENGTH),
-    color = models.CharField(max_length=consts.TAGS_CONSTS_LENGTH),
-    slug = models.SlugField(max_length=consts.TAGS_CONSTS_LENGTH)
+    GREEN = '#7CFC00'
+    ORANGE = '#FF6347'
+    PURPLE = '#8A2BE2'
+    COLOR_TAG = [
+        (GREEN, 'Зеленый'),
+        (ORANGE, 'Оранжевый'),
+        (PURPLE, 'Фиолетовый')
+    ]
+    name = models.CharField(
+        max_length=consts.TAGS_CONSTS_LENGTH,
+        unique=True
+    ),
+    color = models.CharField(
+        max_length=consts.TAGS_CONSTS_LENGTH,
+        choices=COLOR_TAG
+    ),
+    slug = models.SlugField(
+        max_length=consts.TAGS_CONSTS_LENGTH,
+        unique=True
+    )
 
     class Meta:
         verbose_name = 'Тэги'
         verbose_name_plural = 'тэги'
         default_related_name = 'tags'
+
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -67,7 +90,12 @@ class Ingredient(models.Model):
     measurement_unit = models.CharField(max_length=consts.M_U_LENGTH)
 
     class Meta:
-        pass
+        verbose_name = 'Ингредиенты'
+        verbose_name_plural = 'ингредиенты'
+        default_related_name = 'ingredients'
+
+    def __str__(self):
+        return self.name
 
 
 class Recipe(models.Model):

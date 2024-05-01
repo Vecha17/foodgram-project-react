@@ -6,17 +6,17 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly, SAFE_METHODS,
     AllowAny, IsAuthenticated
 )
+from django_filters.rest_framework import DjangoFilterBackend
 
 from recipes.models import User, Recipe, Tag, Ingredient, Subscription
-from .serializers import UserSerializer, RecipeReadSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer
+from .serializers import UserSerializer, RecipeReadSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer, RecipeWriteSerializer, FavoriteSerializer
 from .paginations import Pagination
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (AllowAny, )
-    http_method_names = ('get', 'post')
+    permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = Pagination
 
     @action(
@@ -47,12 +47,16 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
             detail=False,
             methods=['get',],
-            url_path='subscribtions',
+            url_path='subscriptions',
             permission_classes=(IsAuthenticated,),
+            pagination_class=Pagination
     )
-    def subscribtions(self, request):
-        subscribtions = Subscription.objects.filter(user=request.user)
-        serializer = SubscriptionSerializer(subscribtions, many=True)
+    def subscriptions(self, request):
+        subscriptions = Subscription.objects.filter(user_id=request.user.id)
+        serializer = SubscriptionSerializer(
+            subscriptions,
+            many=True,
+        )
         return Response(serializer.data)
 
     @action(
@@ -90,24 +94,32 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
     pagination_class = Pagination
-    
-    #@action(
-    #    detail=True,
-    #    methods=['post', 'delete'],
-    #    url_path='favorite',
-    #    permission_classes=(IsAuthenticated,)
-    #)
-    #def favorite(self, request, pk=None):
-    #    recipe = get_object_or_404(Recipe, id=pk)
-    #    user = request.user
-    #    if request.method == 'POST':
-    #        serializer = pass
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='favorite',
+        permission_classes=(IsAuthenticated,)
+    )
+    def favorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, id=pk)
+        user = request.user
+        if request.method == 'POST':
+            serializer = FavoriteSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(author=user, recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        Ingredient.objects.filter(user=user, recipe=recipe).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
