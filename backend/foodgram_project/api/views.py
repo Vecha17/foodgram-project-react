@@ -9,8 +9,9 @@ from rest_framework.permissions import (
 from django_filters.rest_framework import DjangoFilterBackend
 
 from recipes.models import User, Recipe, Tag, Ingredient, Subscription
-from .serializers import UserSerializer, RecipeReadSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer, RecipeWriteSerializer, FavoriteSerializer
+from .serializers import UserSerializer, RecipeReadSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer, RecipeWriteSerializer, FavoriteSerializer, ShopCartSerializer
 from .paginations import Pagination
+from .utils import shopping_cart
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -103,8 +104,12 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    serializer_class = RecipeReadSerializer
     pagination_class = Pagination
+
+    def get_serializer_class(self):
+        if self.request.method in SAFE_METHODS:
+            return RecipeReadSerializer
+        return RecipeWriteSerializer
 
     @action(
         detail=True,
@@ -123,3 +128,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Ingredient.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='shopping_cart',
+        permission_classes=(IsAuthenticated,)
+    )
+    def shopping_cart(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, id=pk)
+        user = request.user
+        if request.method == 'POST':
+            serializer = ShopCartSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save(author=user, recipe=recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        ShopCartSerializer.objects.filter(user=user, recipe=recipe).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='download_shopping_cart',
+        permission_classes=(IsAuthenticated,)
+    )
+    def download_shopping_cart(self, request):
+        author = self.request.user
+        if author.shopcart.exist():
+            return shopping_cart(self, request, author)
+        return Response(
+            'Список покупок пуст.',
+            status=status.HTTP_404_NOT_FOUND
+        )

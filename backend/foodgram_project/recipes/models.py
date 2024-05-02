@@ -66,11 +66,11 @@ class Tag(models.Model):
     name = models.CharField(
         max_length=consts.TAGS_CONSTS_LENGTH,
         unique=True
-    ),
+    )
     color = models.CharField(
         max_length=consts.TAGS_CONSTS_LENGTH,
         choices=COLOR_TAG
-    ),
+    )
     slug = models.SlugField(
         max_length=consts.TAGS_CONSTS_LENGTH,
         unique=True

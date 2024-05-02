@@ -220,11 +220,11 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'id', 'tags', 'author', 'ingredients', 'is_favorite',
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time'
         )
 
-    def get_is_favorited(self, obj):
+    def get_is_favorite(self, obj):
         if Favorite.objects.filter(recipe=obj):
             return True
         return False
