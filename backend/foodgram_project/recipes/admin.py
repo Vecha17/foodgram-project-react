@@ -5,7 +5,6 @@ from .models import User, Tag, Recipe, Ingredient, Subscription, Amount
 
 @admin.register(User)
 class AdminUser(admin.ModelAdmin):
-    model = User
     list_display = (
         'username',
         'email',
@@ -18,7 +17,6 @@ class AdminUser(admin.ModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    model = Tag
     list_display = (
         'name',
         'slug',
@@ -34,7 +32,6 @@ class IngredientsInline(admin.StackedInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    model = Recipe
     list_display = (
         'author',
         'name',
@@ -50,7 +47,6 @@ class RecipeAdmin(admin.ModelAdmin):
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
-    model = Ingredient
     list_display = (
         'name',
         'measurement_unit'
@@ -60,9 +56,20 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    model = Subscription
     list_display = (
         'user',
         'author'
     )
     search_fields = ('user',)
+
+
+@admin.register(Amount)
+class AmountAdmin(admin.ModelAdmin):
+    list_display = (
+        'recipe',
+        'ingredients',
+        'amount'
+    )
+    list_editable = (
+        'amount'
+    )
