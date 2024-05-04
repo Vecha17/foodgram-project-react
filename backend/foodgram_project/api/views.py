@@ -28,7 +28,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        methods=['get',],
+        methods=['get', ],
         url_path='me',
         permission_classes=(IsAuthenticated,)
     )
@@ -39,7 +39,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        methods=['post',],
+        methods=['post', ],
         url_path='set_password',
         permission_classes=(IsAuthenticated,),
     )
@@ -53,7 +53,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False,
-        methods=['get',],
+        methods=['get', ],
         url_path='subscriptions',
         permission_classes=(IsAuthenticated,),
         pagination_class=Pagination
