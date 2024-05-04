@@ -1,12 +1,14 @@
 import base64
 
-from django.core.files.base import ContentFile
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers
 import webcolors
-
-from recipes.models import User, Recipe, Tag, Ingredient, Subscription, Favorite, ShopCart, Amount
+from django.core.files.base import ContentFile
 from recipes import consts
+from recipes.models import (
+    Amount, Favorite, Ingredient, Recipe, ShopCart,
+    Subscription, Tag, User
+)
+from rest_framework import serializers
+
 from .mixins import ValidateUsernameMixin
 
 
@@ -59,8 +61,21 @@ class UserSerializer(serializers.ModelSerializer, ValidateUsernameMixin):
         model = User
         fields = (
             'email', 'id', 'username',
-            'first_name', 'last_name', 'is_subscribed'
+            'first_name', 'last_name', 'is_subscribed',
+            'password'
         )
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        user = User(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
     def get_is_subscribed(self, obj):
         user = self.context['request'].user

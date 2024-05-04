@@ -1,6 +1,6 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
+from django.db import models
 
 from . import consts
 
@@ -136,6 +136,7 @@ class Recipe(models.Model):
         help_text='Введите название рецепта'
     )
     image = models.ImageField(
+        upload_to='static/images/',
         verbose_name='Фото рецепта',
         help_text='Добавьте фото рецепта'
     )
@@ -157,6 +158,9 @@ class Recipe(models.Model):
             models.UniqueConstraint(
                 fields=['name', 'author'],
                 name='unique_recipe')]
+
+    def __str__(self):
+        return self.name
 
 
 class Amount(models.Model):

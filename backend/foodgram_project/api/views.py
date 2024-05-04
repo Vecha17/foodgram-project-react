@@ -1,23 +1,29 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import filters, generics, status, views, viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import (
-    IsAuthenticatedOrReadOnly, SAFE_METHODS,
-    AllowAny, IsAuthenticated
-)
 from django_filters.rest_framework import DjangoFilterBackend
+from recipes.models import Ingredient, Recipe, Subscription, Tag, User
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import (
+    SAFE_METHODS, AllowAny,
+    IsAuthenticated,
+)
+from rest_framework.response import Response
 
-from recipes.models import User, Recipe, Tag, Ingredient, Subscription
-from .serializers import UserSerializer, RecipeReadSerializer, TagSerializer, IngredientSerializer, PasswordSerializer, SubscriptionSerializer, RecipeWriteSerializer, FavoriteSerializer, ShopCartSerializer
 from .paginations import Pagination
+from .serializers import (
+    FavoriteSerializer, IngredientSerializer,
+    PasswordSerializer, RecipeReadSerializer,
+    RecipeWriteSerializer, ShopCartSerializer,
+    SubscriptionSerializer, TagSerializer,
+    UserSerializer
+)
 from .utils import shopping_cart
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (AllowAny,)
     pagination_class = Pagination
 
     @action(
@@ -26,7 +32,7 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path='me',
             permission_classes=(IsAuthenticated,)
     )
-    def me(self):
+    def me(self, request):
         user = get_object_or_404(User, username=self.request.user.username)
         serializer = self.get_serializer(user, many=False)
         return Response(serializer.data)

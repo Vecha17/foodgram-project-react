@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import User, Tag, Recipe, Ingredient, Subscription, Amount
+from .models import Amount, Ingredient, Recipe, Subscription, Tag, User
 
 
 @admin.register(User)
@@ -67,9 +67,9 @@ class SubscriptionAdmin(admin.ModelAdmin):
 class AmountAdmin(admin.ModelAdmin):
     list_display = (
         'recipe',
-        'ingredients',
+        'ingredient',
         'amount'
     )
     list_editable = (
-        'amount'
+        'amount',
     )
