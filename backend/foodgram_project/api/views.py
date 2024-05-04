@@ -27,10 +27,10 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = Pagination
 
     @action(
-            detail=False,
-            methods=['get',],
-            url_path='me',
-            permission_classes=(IsAuthenticated,)
+        detail=False,
+        methods=['get',],
+        url_path='me',
+        permission_classes=(IsAuthenticated,)
     )
     def me(self, request):
         user = get_object_or_404(User, username=self.request.user.username)
@@ -38,10 +38,10 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(
-            detail=False,
-            methods=['post',],
-            url_path='set_password',
-            permission_classes=(IsAuthenticated,),
+        detail=False,
+        methods=['post',],
+        url_path='set_password',
+        permission_classes=(IsAuthenticated,),
     )
     def set_password(self, request):
         serializer = PasswordSerializer(data=request.data)
@@ -52,11 +52,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
-            detail=False,
-            methods=['get',],
-            url_path='subscriptions',
-            permission_classes=(IsAuthenticated,),
-            pagination_class=Pagination
+        detail=False,
+        methods=['get',],
+        url_path='subscriptions',
+        permission_classes=(IsAuthenticated,),
+        pagination_class=Pagination
     )
     def subscriptions(self, request):
         subscriptions = Subscription.objects.filter(user_id=request.user.id)
@@ -67,10 +67,10 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(
-            detail=True,
-            methods=['post', 'delete'],
-            url_path='subscribe',
-            permission_classes=(IsAuthenticated,),
+        detail=True,
+        methods=['post', 'delete'],
+        url_path='subscribe',
+        permission_classes=(IsAuthenticated,),
     )
     def subscribe(self, request, pk=None):
         user = request.user

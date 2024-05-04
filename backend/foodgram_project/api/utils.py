@@ -1,6 +1,9 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+
 from recipes.models import Amount
+
+CT = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 
 def shopping_cart(self, request, author):
@@ -21,7 +24,7 @@ def shopping_cart(self, request, author):
     filename = 'shopping_list.docx'
     response = HttpResponse(
         shopping_list,
-        content_type='application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        content_type=(CT)
     )
     response['Content-Disposition'] = f'attachment; filename={filename}'
     return response

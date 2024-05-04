@@ -29,7 +29,7 @@ def import_data(file_path, model):
 
 def main():
     from recipes.models import Ingredient
-    file_path = 'D:\Dev/foodgram/foodgram-project-react/data/ingredients.csv'
+    file_path = r'D:\Dev/foodgram/foodgram-project-react/data/ingredients.csv'
     import_data(file_path, Ingredient)
 
 
