@@ -8,7 +8,7 @@ CT = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 def shopping_cart(self, request, author):
     sum_of_ingredients = Amount.objects.filter(
-        recipe__shopcart__author=author
+        recipe__shop_cart__author=author
     ).values(
         'ingredient__name', 'ingredient__measurment_unit'
     ).annotate(

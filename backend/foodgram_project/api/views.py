@@ -1,6 +1,5 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import Ingredient, Recipe, Subscription, Tag, User
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -9,6 +8,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
+from recipes.models import Favorite, Ingredient, Recipe, Subscription, Tag, User
 from .paginations import Pagination
 from .serializers import (
     FavoriteSerializer, IngredientSerializer,
@@ -59,7 +59,9 @@ class UserViewSet(viewsets.ModelViewSet):
         pagination_class=Pagination
     )
     def subscriptions(self, request):
-        subscriptions = Subscription.objects.filter(user_id=request.user.id)
+        user = request.user
+        subscriptions = user.subscriber.all()
+        # subscriptions = Subscription.objects.filter(user_id=request.user.id)
         serializer = SubscriptionSerializer(
             subscriptions,
             many=True,
@@ -83,7 +85,8 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        Subscription.objects.filter(author=author).delete()
+        author.subscribed.filter(user=user).delete()
+        # Subscription.objects.filter(author=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_serializer_class(self):
@@ -105,7 +108,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
     permission_classes = (AllowAny,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    search_fields = ('name',)
+    search_fields = ('^name',)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -131,7 +134,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save(author=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        Ingredient.objects.filter(user=user, recipe=recipe).delete()
+        recipe.favorite.filter(user=user).delete()
+        # Favorite.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -148,7 +152,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save(author=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        ShopCartSerializer.objects.filter(user=user, recipe=recipe).delete()
+        recipe.shop_cart.filter(user=user).delete()
+        # ShopCartSerializer.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -159,7 +164,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def download_shopping_cart(self, request):
         author = self.request.user
-        if author.shopcart.exist():
+        if author.shop_cart.exists():
             return shopping_cart(self, request, author)
         return Response(
             'Список покупок пуст.',

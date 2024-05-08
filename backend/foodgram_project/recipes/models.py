@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from . import consts
@@ -33,6 +33,9 @@ class User(AbstractUser):
         default_related_name = 'users'
         ordering = ('username',)
 
+    def __str__(self):
+        return f'{self.first_name} {self.last_name}'
+
 
 class Subscription(models.Model):
     user = models.ForeignKey(
@@ -56,6 +59,9 @@ class Subscription(models.Model):
         verbose_name = 'Подписки'
         verbose_name_plural = 'подписки'
         default_related_name = 'subscripions'
+
+    def __str__(self):
+        return f'{self.user.username} подписан на {self.author.username}'
 
 
 class Tag(models.Model):
@@ -103,6 +109,7 @@ class Ingredient(models.Model):
     )
 
     class Meta:
+        ordering = ['id']
         verbose_name = 'Ингредиенты'
         verbose_name_plural = 'ингредиенты'
         default_related_name = 'ingredients'
@@ -147,11 +154,19 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
-        validators=[MinValueValidator(1, 'Минимальное время приготовления')],
+        validators=[
+            MinValueValidator(
+                consts.MIN_VALUE_VALID, 'Минимальное время приготовления'
+            ),
+            MaxValueValidator(
+                consts.MAX_VALUE_VALID, 'Максимальное время приготовления'
+            )
+        ],
         help_text='Укажите время приготовления в минутах'
     )
 
     class Meta:
+        ordering = ['-id']
         verbose_name = 'Рецепт'
         verbose_name_plural = 'рецепты'
         constraints = [
@@ -164,16 +179,27 @@ class Recipe(models.Model):
 
 
 class Amount(models.Model):
-    ingredient = models.ForeignKey(
-        Ingredient, on_delete=models.CASCADE,
-        help_text='Выберите ингредиент'
-    )
     recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE,
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipe_ingredients',
         help_text='Выберите рецепт'
     )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name='in_recipe',
+        help_text='Выберите ингредиент'
+    )
     amount = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1, 'Минимальное время приготовления')],
+        validators=[
+            MinValueValidator(
+                consts.MIN_VALUE_VALID, 'Минимальное количество ингредиента'
+            ),
+            MaxValueValidator(
+                consts.MAX_VALUE_VALID, 'Максимальное количество ингредиента'
+            )
+        ],
         help_text='Введите количество ингредиента'
     )
 
@@ -184,6 +210,12 @@ class Amount(models.Model):
             models.UniqueConstraint(
                 fields=['recipe', 'ingredient'],
                 name='unique_ingredients')]
+
+    def __str__(self):
+        return (
+            f'{self.amount} {self.ingredient.measurement_unit} '
+            f'{self.ingredient.name} в рецепте {self.recipe.name}'
+        )
 
 
 class Favorite(models.Model):
@@ -207,6 +239,9 @@ class Favorite(models.Model):
             fields=['author', 'recipe'],
             name='unique_favorite')]
 
+    def __str__(self):
+        return f'{self.recipe.name} в избранном у {self.author.username}'
+
 
 class ShopCart(models.Model):
     user = models.ForeignKey(
@@ -228,3 +263,6 @@ class ShopCart(models.Model):
         constraints = [models.UniqueConstraint(
             fields=['user', 'recipe'],
             name='unique_cart')]
+
+    def __str__(self):
+        return f'{self.recipe.name} в списке покупок у {self.user.username}'
