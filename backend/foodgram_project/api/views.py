@@ -8,7 +8,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 
-from recipes.models import Favorite, Ingredient, Recipe, Subscription, Tag, User
+from recipes.models import Ingredient, Recipe, Tag, User
 from .paginations import Pagination
 from .serializers import (
     FavoriteSerializer, IngredientSerializer,

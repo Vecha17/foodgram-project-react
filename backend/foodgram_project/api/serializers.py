@@ -9,7 +9,6 @@ from recipes.models import (
     Amount, Favorite, Ingredient, Recipe, ShopCart,
     Subscription, Tag, User
 )
-
 from .mixins import ValidateUsernameMixin
 
 
