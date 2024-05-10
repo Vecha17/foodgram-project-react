@@ -1,0 +1,8 @@
+name: Foodgram workflow
+
+on:
+    push:
+      branches:
+        - main
+
+jobs:
