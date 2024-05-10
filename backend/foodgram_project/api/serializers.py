@@ -62,7 +62,6 @@ class UserSerializer(serializers.ModelSerializer, ValidateUsernameMixin):
     def get_is_subscribed(self, obj):
         user = self.context['request'].user
         return user.subscriber.filter(author=obj).exists()
-        # Subscription.objects.filter(user=user, author=obj).exists()
 
 
 class RecipeToSubSerializer(serializers.ModelSerializer):
@@ -93,18 +92,15 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         user = obj.user
         author = obj.author
         return user.subscriber.filter(author=author).exists()
-        # if Subscription.objects.filter(user=obj.user, author=obj.author):
 
     def get_recipes(self, obj):
         author = obj.author
         recipes = author.recipes.all()
-        # recipes = Recipe.objects.filter(author=obj.author)
         return RecipeToSubSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
         author = obj.author
         return author.recipes.all().count()
-        # return Recipe.objects.filter(author=obj.author).count()
 
     def validate(self, data):
         author = self.context.get('author')
@@ -249,14 +245,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
     def get_is_favorite(self, obj):
-        recipe = obj
-        return recipe.favorite.exists()
-        # if Favorite.objects.filter(recipe=obj):
+        return obj.favorite.exists()
 
     def get_is_in_shopping_cart(self, obj):
-        recipe = obj
-        return recipe.shop_cart.exists()
-        # if ShopCart.objects.filter(recipe=obj):
+        return obj.shop_cart.exists()
 
 
 class IngredientsToRecipeSerializer(serializers.ModelSerializer):
@@ -301,13 +293,18 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return serializer.data
 
     def create_ingredients(self, ingredients, recipe):
+        model_list = []
         for ingredient in ingredients:
             id = ingredient['id']
             ingredient = Ingredient.objects.get(pk=id)
-            amount = ingredient['amount']
-            Amount.objects.create(
-                ingredient=ingredient, recipe=recipe, amount=amount
+            model_list.appent(
+                Amount(
+                    ingredient=ingredient,
+                    recipe=recipe,
+                    amount=ingredient['amount']
+                )
             )
+        Amount.objects.bulk_create(model_list)
 
     def create_tags(self, tags, recipe):
         recipe.tags.set(tags)
@@ -321,8 +318,8 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        Amount.objects.filter(recipe=instance).delete()
-        Tag.objects.filter(recipe=instance).delete()
+        instance.recipe_ingredients.dalete()
+        instance.tags.delete()
         self.create_ingredients(validated_data.pop('ingredients'), instance)
         self.create_tags(validated_data.pop('tags'), instance)
         return super().update(instance, validated_data)

@@ -14,16 +14,12 @@ def import_data(file_path, model):
     with open(file_path, encoding='utf-8') as file:
         reader = csv.reader(file)
         for raw in reader:
-            print(raw)
-            print(raw[0])
-            print(raw[1])
             list.append(
                 model(
                     name=raw[0],
                     measurement_unit=raw[1]
                 )
             )
-        print(list)
         model.objects.bulk_create(list)
 
 

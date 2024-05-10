@@ -61,7 +61,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscriptions(self, request):
         user = request.user
         subscriptions = user.subscriber.all()
-        # subscriptions = Subscription.objects.filter(user_id=request.user.id)
         serializer = SubscriptionSerializer(
             subscriptions,
             many=True,
@@ -135,7 +134,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save(author=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         recipe.favorite.filter(user=user).delete()
-        # Favorite.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -153,7 +151,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save(author=user, recipe=recipe)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         recipe.shop_cart.filter(user=user).delete()
-        # ShopCartSerializer.objects.filter(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
